@@ -31,10 +31,15 @@ void SandboxLayer::OnAttach()
 	glBindVertexArray(m_QuadVA);
 
 	float vertices[] = {
+		-1.5f, -0.5f, 0.0f,
 		-0.5f, -0.5f, 0.0f,
+		-0.5f,  0.5f, 0.0f,
+		-1.5f,  0.5f, 0.0f,
+
 		 0.5f, -0.5f, 0.0f,
-		 0.5f,  0.5f, 0.0f,
-		-0.5f,  0.5f, 0.0f
+		 1.5f, -0.5f, 0.0f,
+		 1.5f,  0.5f, 0.0f,
+		 0.5f,  0.5f, 0.0f
 	};
 
 	glCreateBuffers(1, &m_QuadVB);
@@ -44,7 +49,13 @@ void SandboxLayer::OnAttach()
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
 
-	uint32_t indices[] = { 0, 1, 2, 2, 3, 0 };
+	uint32_t indices[] = {
+		0, 1, 2, 
+		2, 3, 0,
+		
+		4, 5, 6,
+		6, 7, 4
+	};
 	glCreateBuffers(1, &m_QuadIB);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_QuadIB);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
@@ -96,12 +107,8 @@ void SandboxLayer::OnUpdate(Timestep ts)
 
 	glBindVertexArray(m_QuadVA);
 
-	// Draw the first rectangle
-	SetUniformMat4(m_Shader->GetRendererID(), "u_Transform", glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-	// Draw the second rectangle
-	SetUniformMat4(m_Shader->GetRendererID(), "u_Transform", glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.0f, 0.0f)));
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+	SetUniformMat4(m_Shader->GetRendererID(), "u_Transform", glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)));
+	glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, nullptr);
 }
 
 void SandboxLayer::OnImGuiRender()
