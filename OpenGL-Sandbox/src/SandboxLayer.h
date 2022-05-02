@@ -23,8 +23,10 @@ private:
 	GLuint m_IvessTex, m_HeartTex;
 
 	/* 
-	The offset for textures. If the texture ID inside the vertex array
-	is 0, this vertex isn't supposed to get its color from a texture.
+	The offset for textures inside of the vertex array. If the texture ID
+	inside the vertex array is 0.0f, this vertex is supposed to be colored.
+	If it's >m_TexIDOffset, then the color should be retrieved from the
+	specified texture.
 	*/
 	float m_TexIDOffset = 1.0f;
 };
