@@ -18,5 +18,7 @@ private:
 	GLCore::Utils::Shader* m_Shader;
 	GLCore::Utils::OrthographicCameraController m_CameraController;
 
-	GLuint m_QuadVA, m_QuadVB, m_QuadIB;
+	GLuint m_QuadVA = 0, m_QuadVB = 0, m_QuadIB = 0;
+
+	GLuint m_IvessTex, m_HeartTex;
 };
