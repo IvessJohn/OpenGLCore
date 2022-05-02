@@ -31,23 +31,29 @@ void SandboxLayer::OnAttach()
 	glBindVertexArray(m_QuadVA);
 
 	float vertices[] = {
-		-1.5f, -0.5f, 0.0f,
-		-0.5f, -0.5f, 0.0f,
-		-0.5f,  0.5f, 0.0f,
-		-1.5f,  0.5f, 0.0f,
+		-1.5f, -0.5f, 0.0f, 0.6f, 0.6f, 0.8f, 1.0f,
+		-0.5f, -0.5f, 0.0f, 0.9f, 0.9f, 0.9f, 1.0f,
+		-0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.7f, 1.0f,
+		-1.5f,  0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 
-		 0.5f, -0.5f, 0.0f,
-		 1.5f, -0.5f, 0.0f,
-		 1.5f,  0.5f, 0.0f,
-		 0.5f,  0.5f, 0.0f
+		 0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.3f, 1.0f,
+		 1.5f, -0.5f, 0.0f, 0.5f, 0.0f, 0.3f, 1.0f,
+		 1.5f,  0.5f, 0.0f, 0.8f, 0.2f, 0.3f, 1.0f,
+		 0.5f,  0.5f, 0.0f, 0.8f, 0.6f, 0.3f, 1.0f
 	};
 
 	glCreateBuffers(1, &m_QuadVB);
 	glBindBuffer(GL_ARRAY_BUFFER, m_QuadVB);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+	int offset = 0;
+	// Define the position attribute (3 floats)
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (const void*)offset);
+	// Define the color attribute (4 floats)
+	offset = 3 * sizeof(float);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (const void*)offset);
 
 	uint32_t indices[] = {
 		0, 1, 2, 
@@ -103,7 +109,6 @@ void SandboxLayer::OnUpdate(Timestep ts)
 	glUseProgram(m_Shader->GetRendererID());
 
 	SetUniformMat4(m_Shader->GetRendererID(), "u_ViewProjection", m_CameraController.GetCamera().GetViewProjectionMatrix());
-	SetUniformVec4(m_Shader->GetRendererID(), "u_Color", m_SquareColor);
 
 	glBindVertexArray(m_QuadVA);
 
@@ -114,6 +119,5 @@ void SandboxLayer::OnUpdate(Timestep ts)
 void SandboxLayer::OnImGuiRender()
 {
 	ImGui::Begin("Controls");
-	ImGui::ColorEdit4("Square Color", glm::value_ptr(m_SquareColor));
 	ImGui::End();
 }
