@@ -10,7 +10,16 @@ uniform sampler2D u_Textures[2];
 
 void main()
 {
-	int id = int(v_TexID);
-	vec4 texColor = texture(u_Textures[id], v_TexCoord);
-	o_Color = texColor;
+	if (v_TexID > 0)
+	// Get the color from a texture
+	{
+		int id = int(v_TexID) - 1;
+		vec4 texColor = texture(u_Textures[id], v_TexCoord);
+		o_Color = texColor;
+	}
+	else
+	// Get the color from the vertex array
+	{
+		o_Color = v_Color;
+	}
 }
