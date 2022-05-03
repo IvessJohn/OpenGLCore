@@ -5,6 +5,18 @@
 using namespace GLCore;
 using namespace GLCore::Utils;
 
+struct Vec2 { float x, y; };
+struct Vec3 { float x, y, z; };
+struct Vec4 { float x, y, z, w; };
+
+struct Vertex
+{
+	Vec3 Position;
+	Vec4 Color;
+	Vec2 TexCoords;
+	float TexID;
+};
+
 SandboxLayer::SandboxLayer()
 	: m_CameraController(16.0f / 9.0f)
 {
@@ -61,41 +73,23 @@ void SandboxLayer::OnAttach()
 	glCreateVertexArrays(1, &m_QuadVA);
 	glBindVertexArray(m_QuadVA);
 
-	float vertices[] = {
-		// Position			// Color				// TexPos	//Texture ID
-		-1.5f, -0.5f, 0.0f, 0.6f, 0.6f, 0.8f, 1.0f, 0.0f, 0.0f,	m_TexIDOffset + 0.0f,
-		-0.5f, -0.5f, 0.0f, 0.9f, 0.9f, 0.9f, 1.0f, 1.0f, 0.0f,	m_TexIDOffset + 0.0f,
-		-0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.7f, 1.0f, 1.0f, 1.0f,	m_TexIDOffset + 0.0f,
-		-1.5f,  0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,	m_TexIDOffset + 0.0f,
-																					
-		 0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.3f, 1.0f, 0.0f, 0.0f,	m_TexIDOffset + 1.0f,
-		 1.5f, -0.5f, 0.0f, 0.5f, 0.0f, 0.3f, 1.0f, 1.0f, 0.0f,	m_TexIDOffset + 1.0f,
-		 1.5f,  0.5f, 0.0f, 0.8f, 0.2f, 0.3f, 1.0f, 1.0f, 1.0f,	m_TexIDOffset + 1.0f,
-		 0.5f,  0.5f, 0.0f, 0.8f, 0.6f, 0.3f, 1.0f, 0.0f, 1.0f,	m_TexIDOffset + 1.0f
-	};
-	// If TexID
 
 	glCreateBuffers(1, &m_QuadVB);
 	glBindBuffer(GL_ARRAY_BUFFER, m_QuadVB);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 64 * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
 
-	int offset = 0;
 	// Define the position attribute (3 floats)
 	glEnableVertexArrayAttrib(m_QuadVB, 0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (const void*)offset);
-	offset += 3 * sizeof(float);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, Position));
 	// Define the color attribute (4 floats)
 	glEnableVertexArrayAttrib(m_QuadVB, 1);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (const void*)offset);
-	offset += 4 * sizeof(float);
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, Color));
 	// Define the texture position attribute (2 floats)
 	glEnableVertexArrayAttrib(m_QuadVB, 2);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (const void*)offset);
-	offset += 2 * sizeof(float);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, TexCoords));
 	// Define the texture ID (1 float)
 	glEnableVertexArrayAttrib(m_QuadVB, 3);
-	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (const void*)offset);
-	offset += 1 * sizeof(float);
+	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, TexID));
 
 	uint32_t indices[] = {
 		0, 1, 2, 
@@ -144,9 +138,70 @@ static void SetUniformVec3(uint32_t shader, const char* name, const glm::vec3& v
 	glUniform3f(location, vec.x, vec.y, vec.z);
 }
 
+static std::array<Vertex, 4> CreateQuad(float x, float y, float textureID, float quad_size = 1.0f)
+{
+	/*
+	Vertex{
+		Position = {x,y,z},
+		Color = {r,g,b,a},
+		TexCoords = {tx,ty},
+		TexID = id
+	};
+	*/
+
+	Vertex v0;
+	v0.Position = { x, y, 0.0f };
+	v0.Color = { 0.6f, 0.6f, 0.8f, 1.0f };
+	v0.TexCoords={ 0.0f, 0.0f };
+	v0.TexID = textureID;
+
+	Vertex v1;
+	v1.Position = { x + quad_size, y, 0.0f };
+	v1.Color = { 0.9f, 0.9f, 0.9f, 1.0f };
+	v1.TexCoords = { 1.0f, 0.0f };
+	v1.TexID = textureID;
+
+	Vertex v2;
+	v2.Position = { x + quad_size, y + quad_size, 0.0f };
+	v2.Color = { 1.0f, 1.0f, 0.7f, 1.0f };
+	v2.TexCoords = { 1.0f, 1.0f };
+	v2.TexID = textureID;
+
+	Vertex v3;
+	v3.Position = { x, y + quad_size, 0.0f };
+	v3.Color = { 1.0f, 1.0f, 1.0f, 1.0f };
+	v3.TexCoords = { 0.0f, 1.0f };
+	v3.TexID = textureID;
+
+	return { v0, v1, v2, v3 };
+}
+
 void SandboxLayer::OnUpdate(Timestep ts)
 {
 	m_CameraController.OnUpdate(ts);
+	// Set dynamic vertex buffer
+	/*float vertices[] = {
+		// Position			// Color				// TexPos	//Texture ID
+		-1.5f, -0.5f, 0.0f, 0.6f, 0.6f, 0.8f, 1.0f, 0.0f, 0.0f,	m_TexIDOffset + 0.0f,
+		-0.5f, -0.5f, 0.0f, 0.9f, 0.9f, 0.9f, 1.0f, 1.0f, 0.0f,	m_TexIDOffset + 0.0f,
+		-0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.7f, 1.0f, 1.0f, 1.0f,	m_TexIDOffset + 0.0f,
+		-1.5f,  0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,	m_TexIDOffset + 0.0f,
+
+		 0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.3f, 1.0f, 0.0f, 0.0f,	m_TexIDOffset + 1.0f,
+		 1.5f, -0.5f, 0.0f, 0.5f, 0.0f, 0.3f, 1.0f, 1.0f, 0.0f,	m_TexIDOffset + 1.0f,
+		 1.5f,  0.5f, 0.0f, 0.8f, 0.2f, 0.3f, 1.0f, 1.0f, 1.0f,	m_TexIDOffset + 1.0f,
+		 0.5f,  0.5f, 0.0f, 0.8f, 0.6f, 0.3f, 1.0f, 0.0f, 1.0f,	m_TexIDOffset + 1.0f
+	};*/
+
+	auto quad1 = CreateQuad(m_QuadPosition[0], m_QuadPosition[1], m_TexIDOffset + 0.0f);
+	auto quad2 = CreateQuad(0.5f, -0.5f, m_TexIDOffset + 1.0f);
+
+	Vertex vertices[8];
+	memcpy(vertices, quad1.data(), quad1.size() * sizeof(Vertex));
+	memcpy(vertices + quad1.size(), quad2.data(), quad2.size() * sizeof(Vertex));
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_QuadVB);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -165,6 +220,9 @@ void SandboxLayer::OnUpdate(Timestep ts)
 void SandboxLayer::OnImGuiRender()
 {
 	ImGui::Begin("Controls");
+
+	ImGui::DragFloat2("Quad 1 Position", m_QuadPosition);
 	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+	
 	ImGui::End();
 }

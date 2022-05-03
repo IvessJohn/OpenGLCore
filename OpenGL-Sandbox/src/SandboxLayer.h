@@ -29,4 +29,6 @@ private:
 	specified texture.
 	*/
 	float m_TexIDOffset = 1.0f;
+
+	float m_QuadPosition[2] = {-1.5f, -0.5f};
 };
